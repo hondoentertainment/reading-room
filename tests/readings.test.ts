@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { SHELVES, minutesLabel, seededReadings, wordCount } from "../src/lib/readings";
+import { SHELVES, minutesLabel, seededReadings, timeLabel, wordCount } from "../src/lib/readings";
 
 const forbidden = [
   "Gods do not answer letters",
@@ -152,5 +152,19 @@ describe("seeded shelf", () => {
       assert.ok((reading.minutes ?? 0) > 0);
     }
     assert.equal(minutesLabel(5), "About 5 min");
+  });
+
+  it("keeps an author, shelf, and read time on every entry", () => {
+    assert.ok(seededReadings.length > 0);
+    for (const reading of seededReadings) {
+      assert.equal(typeof reading.author, "string", reading.slug);
+      assert.ok(reading.author.trim(), `${reading.slug} is missing an author`);
+      assert.ok(reading.shelf, `${reading.slug} is missing a shelf`);
+      assert.ok(SHELVES.some((shelf) => shelf.id === reading.shelf), `${reading.slug} has an unknown shelf`);
+      assert.equal(typeof reading.readingTime, "string", reading.slug);
+      assert.ok(reading.readingTime?.trim(), `${reading.slug} is missing a read time`);
+      assert.equal(timeLabel(reading), reading.readingTime, reading.slug);
+      assert.ok(reading.tags.length > 0, `${reading.slug} is missing tags`);
+    }
   });
 });
