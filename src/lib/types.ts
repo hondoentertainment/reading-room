@@ -2,6 +2,18 @@ export const READING_STATUSES = ["to-read", "reading", "done"] as const;
 
 export type ReadingStatus = (typeof READING_STATUSES)[number];
 
+export const SHELF_IDS = [
+  "sports-witness",
+  "ai-tech",
+  "writing-craft",
+  "founders-work",
+  "love-connection",
+  "body-attention",
+  "philosophy-meaning",
+] as const;
+
+export type ShelfId = (typeof SHELF_IDS)[number];
+
 export type Reading = {
   id: string;
   slug: string;
@@ -21,6 +33,8 @@ export type Reading = {
   question?: string;
   /** Seeded group. "five-for-kyle" leads the shelf. */
   collection?: "five-for-kyle";
+  /** Themed shelf for the larger library. The five and the older seeds stay ungrouped. */
+  shelf?: ShelfId;
   defaultStatus: ReadingStatus;
 };
 
