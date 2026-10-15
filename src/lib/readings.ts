@@ -60,6 +60,7 @@ export const seededReadings: Reading[] = [
     tags: ["essay", "sports", "tennis", "DFW"],
     minutes: 28,
     defaultStatus: "reading",
+    shelf: "sports-witness",
     ...curated(
       "Wallace explores the awe of watching an extraordinary athlete: the physical beauty, the impossible moments, and the difference between watching on television and being there.",
       "Brings together love of sports, analytical mind, and writing ambitions; connects with the emotional purpose behind Deep Seats: preserving what it felt like to witness something unforgettable.",
@@ -79,6 +80,7 @@ export const seededReadings: Reading[] = [
     tags: ["essay", "lyric essay", "nature", "Doyle"],
     minutes: 6,
     defaultStatus: "to-read",
+    shelf: "writing-craft",
     ...curated(
       "Doyle begins with hummingbirds and moves through the hearts of other creatures into human vulnerability, loneliness, and love; the shift from physical observation to emotional revelation is beautifully controlled.",
       "Kyle's poetry explores longing, connection, and the hope of being known; shows how an ordinary image can carry a powerful feeling without explaining everything.",
@@ -98,6 +100,7 @@ export const seededReadings: Reading[] = [
     tags: ["essay", "AI", "writing", "Chiang"],
     minutes: 20,
     defaultStatus: "to-read",
+    shelf: "ai-tech",
     ...curated(
       "Chiang argues that art emerges from the countless intentional choices a creator makes, and questions what happens when those choices are delegated to AI.",
       "Sits between AI and writing; a chance to decide which creative decisions to keep.",
@@ -117,6 +120,7 @@ export const seededReadings: Reading[] = [
     tags: ["essay", "work", "writing", "Graham"],
     minutes: 45,
     defaultStatus: "to-read",
+    shelf: "founders-work",
     ...curated(
       "An expansive essay about finding worthwhile work through curiosity, developing expertise, and pursuing ideas others overlook.",
       "Ambitions across product, AI, and authorship; which interests deserve sustained attention and how an unusual combination becomes an advantage.",
@@ -136,6 +140,7 @@ export const seededReadings: Reading[] = [
     tags: ["essay", "sports", "baseball", "Updike"],
     minutes: 30,
     defaultStatus: "to-read",
+    shelf: "sports-witness",
     ...curated(
       "Ted Williams's final game: Fenway's atmosphere, a complicated relationship with fans, and the weight of a remarkable career ending.",
       "Baseball, sports memorabilia, and storytelling meet; a single afternoon can hold decades of meaning.",
@@ -155,9 +160,16 @@ export const seededReadings: Reading[] = [
     url: "https://www.esquire.com/news-politics/a638/frank-sinatra-has-a-cold-gay-talese/",
     tags: ["essay", "profile", "journalism", "Talese"],
     minutes: 60,
+    readingTime: "~60 min",
     defaultStatus: "to-read",
+    shelf: "writing-craft",
     blurb:
-      "Esquire sent Gay Talese to write about Frank Sinatra in the winter of 1965. Sinatra had a cold, was in a dark mood, and would not sit for an interview. Talese stayed in Los Angeles and built the portrait from the people and rooms around him. It ran in April 1966 and became a model for writing about a famous person who refuses to talk.",
+      "Talese builds a portrait of Frank Sinatra from the rooms and people around him, after the singer refuses an interview and spends the winter in a dark mood.",
+    summary:
+      "Talese builds a portrait of Frank Sinatra from the rooms and people around him, after the singer refuses an interview and spends the winter in a dark mood.",
+    resonance:
+      "A lesson for a novelist: you can write someone who will not sit down and explain himself, if you stay close to the life around him.",
+    question: "Who in Xavier Transport would I understand better by writing the people around them?",
   },
   {
     id: "consider-the-lobster",
@@ -170,9 +182,16 @@ export const seededReadings: Reading[] = [
     url: "http://www.gourmet.com.s3-website-us-east-1.amazonaws.com/magazine/2000s/2004/08/consider_the_lobster.html",
     tags: ["essay", "food", "ethics", "DFW"],
     minutes: 40,
+    readingTime: "~40 min",
     defaultStatus: "to-read",
+    shelf: "philosophy-meaning",
     blurb:
-      "Gourmet sent David Foster Wallace to the 2003 Maine Lobster Festival. What it published in August 2004 will not stay inside a festival report. Wallace walks the crowds and the food, then keeps circling the pot and the question of boiling a living animal for dinner. The essay is long, footnoted, and deliberately uneasy.",
+      "Wallace goes to the Maine Lobster Festival for a food magazine and cannot leave the harder question alone: what it means to boil a living animal for a pleasant afternoon.",
+    summary:
+      "Wallace goes to the Maine Lobster Festival for a food magazine and cannot leave the harder question alone: what it means to boil a living animal for a pleasant afternoon.",
+    resonance:
+      "The poems and the products share this habit. Follow a pleasure until it turns into a question you cannot shrug off.",
+    question: "Where am I treating a comfortable habit as if it had no cost?",
   },
   {
     id: "this-is-water",
@@ -185,9 +204,16 @@ export const seededReadings: Reading[] = [
     url: "https://www.kenyon.edu/news/archive/this-is-water/",
     tags: ["essay", "speech", "DFW"],
     minutes: 20,
+    readingTime: "~20 min",
     defaultStatus: "to-read",
+    shelf: "philosophy-meaning",
     blurb:
-      "David Foster Wallace gave the Kenyon College commencement address on May 21, 2005. He starts with fish who cannot see the water they are swimming in, then talks about the practical freedom to choose what you notice on an ordinary adult day. The speech came to be called This Is Water. Kenyon still hosts the record of it.",
+      "In a commencement speech, Wallace asks graduates to notice the water of ordinary adult life, and to treat attention itself as the freedom they still have.",
+    summary:
+      "In a commencement speech, Wallace asks graduates to notice the water of ordinary adult life, and to treat attention itself as the freedom they still have.",
+    resonance:
+      "Green Lake, the gym, and a Wednesday night are all water. The speech asks whether you are actually there for them.",
+    question: "What did I move through today without noticing it was the life I meant to be living?",
   },
   {
     id: "the-web-of-the-game",
@@ -200,9 +226,16 @@ export const seededReadings: Reading[] = [
     url: "https://www.newyorker.com/magazine/1981/07/20/the-web-of-the-game",
     tags: ["essay", "sports", "baseball", "Angell"],
     minutes: 35,
+    readingTime: "~35 min",
     defaultStatus: "to-read",
+    shelf: "sports-witness",
     blurb:
-      "Roger Angell’s piece in the July 20, 1981 issue of The New Yorker sits at Yale Field during a college game: Ron Darling pitching for Yale, Frank Viola for St. John’s, and the old pitcher Smokey Joe Wood in the seat beside Angell. The innings on the field and Wood’s memory of an earlier baseball keep changing places, until the two afternoons feel like one cloth.",
+      "Angell sits at a college game with an old pitcher beside him, and the innings in front of them keep changing places with a game from long ago.",
+    summary:
+      "Angell sits at a college game with an old pitcher beside him, and the innings in front of them keep changing places with a game from long ago.",
+    resonance:
+      "Deep Seats is this essay's wager: a game you witnessed can hold another person's memory, if someone writes the two afternoons together.",
+    question: "Which game of mine is still unfinished until I tell it to someone who was not there?",
   },
 ];
 
