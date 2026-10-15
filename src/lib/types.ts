@@ -13,7 +13,14 @@ export type Reading = {
   url: string;
   tags: string[];
   minutes: number | null;
+  /** Shown instead of a single minute count, for example "25–30 min". */
+  readingTime?: string;
   blurb: string;
+  summary?: string;
+  resonance?: string;
+  question?: string;
+  /** Seeded group. "five-for-kyle" leads the shelf. */
+  collection?: "five-for-kyle";
   defaultStatus: ReadingStatus;
 };
 

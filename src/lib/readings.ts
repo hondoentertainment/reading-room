@@ -10,6 +10,42 @@ export const STATUS_LABEL: Record<ReadingStatus, string> = {
  * Seeded shelf. Blurbs are original context written for this app.
  * The essays themselves are not stored here — only links to where they were published.
  */
+const FIVE = "five-for-kyle" as const;
+
+function curated(
+  summary: string,
+  resonance: string,
+  question: string,
+  readingTime: string,
+): Pick<Reading, "blurb" | "summary" | "resonance" | "question" | "readingTime" | "collection"> {
+  return {
+    blurb: summary,
+    summary,
+    resonance,
+    question,
+    readingTime,
+    collection: FIVE,
+  };
+}
+
+export const whereToStart = [
+  {
+    label: "Emotional read",
+    href: "/reading/joyas-voladoras",
+    text: "Start with Doyle. Read once for feeling, again to notice how he creates it.",
+  },
+  {
+    label: "Provocative discussion",
+    href: "/reading/why-ai-isnt-going-to-make-art",
+    text: "Start with Chiang.",
+  },
+  {
+    label: "Focus and ambition",
+    href: "/reading/how-to-do-great-work",
+    text: "Read Graham when you have time to reflect.",
+  },
+] as const;
+
 export const seededReadings: Reading[] = [
   {
     id: "federer-as-religious-experience",
@@ -21,10 +57,14 @@ export const seededReadings: Reading[] = [
     source: "Play Magazine / The New York Times",
     url: "https://www.nytimes.com/2006/08/20/sports/playmagazine/20federer.html",
     tags: ["essay", "sports", "tennis", "DFW"],
-    minutes: 25,
+    minutes: 28,
     defaultStatus: "reading",
-    blurb:
-      "In July 2006, Roger Federer and Rafael Nadal played the Wimbledon men’s final, a match that made ordinary tennis language feel too small. Writing for Play Magazine in The New York Times that August, David Foster Wallace tried to name what he saw in Federer’s game: brief stretches when the body seems to solve space while the point is still live. He called them Federer Moments. The essay treats those moments as a kind of beauty specific to sport — not decoration on top of the score, but the score itself becoming something you feel in the chest. This page does not stand in for the piece. It keeps a link to the Times text, and room for your notes.",
+    ...curated(
+      "Wallace explores the awe of watching an extraordinary athlete: the physical beauty, the impossible moments, and the difference between watching on television and being there.",
+      "Brings together love of sports, analytical mind, and writing ambitions; connects with the emotional purpose behind Deep Seats: preserving what it felt like to witness something unforgettable.",
+      "What sporting moment would I want to describe so vividly that someone else could feel what I felt?",
+      "25–30 min",
+    ),
   },
   {
     id: "joyas-voladoras",
@@ -36,10 +76,52 @@ export const seededReadings: Reading[] = [
     source: "The American Scholar",
     url: "https://theamericanscholar.org/joyas-volardores/",
     tags: ["essay", "lyric essay", "nature", "Doyle"],
-    minutes: 5,
+    minutes: 6,
     defaultStatus: "to-read",
-    blurb:
-      "Brian Doyle’s short lyric essay appeared in The American Scholar in autumn 2004. It begins with the hummingbird, whose heart is almost the whole animal and beats too fast for our ears, then sets that frenzy beside the blue whale, whose heart is a room and whose pulse is a slow tide. Between those two scales he turns to the human heart: the one that has to carry love, fear, and loss at a pace we can actually feel. The piece is brief and wide. Read it at the magazine; this page is for the lines and notes you want to keep.",
+    ...curated(
+      "Doyle begins with hummingbirds and moves through the hearts of other creatures into human vulnerability, loneliness, and love; the shift from physical observation to emotional revelation is beautifully controlled.",
+      "Kyle's poetry explores longing, connection, and the hope of being known; shows how an ordinary image can carry a powerful feeling without explaining everything.",
+      "What small detail from my walks around Green Lake could become the starting point for something emotionally larger?",
+      "5–7 min",
+    ),
+  },
+  {
+    id: "why-ai-isnt-going-to-make-art",
+    slug: "why-ai-isnt-going-to-make-art",
+    title: "Why A.I. Isn't Going to Make Art",
+    author: "Ted Chiang",
+    year: 2024,
+    published: "August 31, 2024",
+    source: "The New Yorker",
+    url: "https://www.newyorker.com/culture/the-weekend-essay/why-ai-isnt-going-to-make-art",
+    tags: ["essay", "AI", "writing", "Chiang"],
+    minutes: 20,
+    defaultStatus: "to-read",
+    ...curated(
+      "Chiang argues that art emerges from the countless intentional choices a creator makes, and questions what happens when those choices are delegated to AI.",
+      "Sits between AI and writing; a chance to decide which creative decisions to keep.",
+      "Where does AI strengthen my voice, and where might it replace it?",
+      "~20 min",
+    ),
+  },
+  {
+    id: "how-to-do-great-work",
+    slug: "how-to-do-great-work",
+    title: "How to Do Great Work",
+    author: "Paul Graham",
+    year: 2023,
+    published: "July 2023",
+    source: "paulgraham.com",
+    url: "https://paulgraham.com/greatwork.html",
+    tags: ["essay", "work", "writing", "Graham"],
+    minutes: 45,
+    defaultStatus: "to-read",
+    ...curated(
+      "An expansive essay about finding worthwhile work through curiosity, developing expertise, and pursuing ideas others overlook.",
+      "Ambitions across product, AI, and authorship; which interests deserve sustained attention and how an unusual combination becomes an advantage.",
+      "Which project would I keep exploring even if nobody rewarded me for it?",
+      "~45 min",
+    ),
   },
   {
     id: "hub-fans-bid-kid-adieu",
@@ -51,10 +133,14 @@ export const seededReadings: Reading[] = [
     source: "The New Yorker",
     url: "https://www.newyorker.com/magazine/1960/10/22/hub-fans-bid-kid-adieu",
     tags: ["essay", "sports", "baseball", "Updike"],
-    minutes: 28,
+    minutes: 30,
     defaultStatus: "to-read",
-    blurb:
-      "On September 28, 1960, John Updike sat at Fenway Park for Ted Williams’s last home game. The New Yorker ran his account that October. It is a farewell from the stands: an oddly shaped ballpark, a tired team, and a player who could end the day with one swing and still withhold the salute the crowd wanted. Sports writing, here, behaves like a story about fame.",
+    ...curated(
+      "Ted Williams's final game: Fenway's atmosphere, a complicated relationship with fans, and the weight of a remarkable career ending.",
+      "Baseball, sports memorabilia, and storytelling meet; a single afternoon can hold decades of meaning.",
+      "Which game from my own life deserves this kind of attention?",
+      "~30 min",
+    ),
   },
   {
     id: "frank-sinatra-has-a-cold",
@@ -132,9 +218,21 @@ export function minutesLabel(minutes: number | null): string | null {
   return `About ${minutes} min`;
 }
 
-export function metaLine(reading: Pick<Reading, "published" | "source" | "minutes">): string {
-  const parts = [reading.published, reading.source, minutesLabel(reading.minutes)].filter(
+export function timeLabel(
+  reading: Pick<Reading, "minutes" | "readingTime">,
+): string | null {
+  return reading.readingTime ?? minutesLabel(reading.minutes);
+}
+
+export function metaLine(
+  reading: Pick<Reading, "published" | "source" | "minutes" | "readingTime">,
+): string {
+  const parts = [reading.published, reading.source, timeLabel(reading)].filter(
     (part): part is string => Boolean(part),
   );
   return parts.join(" · ");
+}
+
+export function isFiveForKyle(reading: Reading): boolean {
+  return reading.collection === "five-for-kyle";
 }
