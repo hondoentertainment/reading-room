@@ -7,9 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useShelf } from "@/hooks/use-shelf";
-import { STATUS_LABEL, isFiveForKyle, metaLine, timeLabel, whereToStart } from "@/lib/readings";
+import { SHELVES, STATUS_LABEL, isFiveForKyle, metaLine, timeLabel, whereToStart } from "@/lib/readings";
 import { allTags, catalog, entryFor } from "@/lib/shelf";
-import type { Reading, ReadingStatus } from "@/lib/types";
+import type { Reading, ReadingStatus, ShelfId } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const statuses: Array<ReadingStatus | "all"> = ["all", "to-read", "reading", "done"];
@@ -114,6 +114,7 @@ export function LibraryView() {
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<ReadingStatus | "all">("all");
   const [tag, setTag] = useState<string | null>(null);
+  const [shelfId, setShelfId] = useState<ShelfId | "all">("all");
 
   const readings = catalog(shelf.state);
   const tags = useMemo(() => allTags(readings), [readings]);
@@ -121,6 +122,7 @@ export function LibraryView() {
     const entry = entryFor(reading, shelf.state);
     if (status !== "all" && entry.status !== status) return false;
     if (tag && !reading.tags.some((item) => item.toLowerCase() === tag.toLowerCase())) return false;
+    if (shelfId !== "all" && reading.shelf !== shelfId) return false;
     const needle = query.trim().toLowerCase();
     if (!needle) return true;
     const haystack = [
@@ -138,10 +140,14 @@ export function LibraryView() {
     return haystack.includes(needle);
   });
   const featured = visible.filter(isFiveForKyle);
-  const more = visible.filter((reading) => !isFiveForKyle(reading));
+  const more = visible.filter((reading) => !isFiveForKyle(reading) && !reading.shelf);
   const featuredOrder = readings.filter(isFiveForKyle);
+  const shelfSections = SHELVES.map((shelf) => ({
+    ...shelf,
+    readings: visible.filter((reading) => reading.shelf === shelf.id),
+  })).filter((shelf) => shelf.readings.length > 0);
 
-  const filtering = query.trim() !== "" || status !== "all" || tag !== null;
+  const filtering = query.trim() !== "" || status !== "all" || tag !== null || shelfId !== "all";
 
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
@@ -153,6 +159,7 @@ export function LibraryView() {
         </p>
       </div>
 
+      {shelfId === "all" ? (
       <section className="mt-8 rounded-2xl border border-border bg-card p-5 sm:p-6" aria-labelledby="where-to-start">
         <h2 id="where-to-start" className="font-display text-2xl tracking-tight">
           Where to start
@@ -168,6 +175,7 @@ export function LibraryView() {
           ))}
         </ul>
       </section>
+      ) : null}
 
       {shelf.error ? (
         <p className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm" role="alert">
@@ -196,6 +204,25 @@ export function LibraryView() {
             {statuses.map((item) => (
               <Chip key={item} pressed={status === item} onClick={() => setStatus(item)}>
                 {item === "all" ? "All" : STATUS_LABEL[item]}
+              </Chip>
+            ))}
+          </div>
+        </div>
+        <div className="space-y-2">
+          <p className="text-sm font-medium" id="shelf-filter-label">
+            Shelf
+          </p>
+          <div
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
+            role="group"
+            aria-labelledby="shelf-filter-label"
+          >
+            <Chip pressed={shelfId === "all"} onClick={() => setShelfId("all")}>
+              All shelves
+            </Chip>
+            {SHELVES.map((shelf) => (
+              <Chip key={shelf.id} pressed={shelfId === shelf.id} onClick={() => setShelfId(shelf.id)}>
+                {shelf.label}
               </Chip>
             ))}
           </div>
@@ -244,6 +271,7 @@ export function LibraryView() {
                 setQuery("");
                 setStatus("all");
                 setTag(null);
+                setShelfId("all");
               }}
             >
               Clear filters
@@ -252,7 +280,7 @@ export function LibraryView() {
         </div>
       ) : (
         <div className="mt-8 space-y-12">
-          {featured.length > 0 ? (
+          {shelfId === "all" && featured.length > 0 ? (
             <section aria-labelledby="five-heading">
               <h2 id="five-heading" className="font-display text-2xl tracking-tight">
                 The five
@@ -273,7 +301,24 @@ export function LibraryView() {
               </ol>
             </section>
           ) : null}
-          {more.length > 0 ? (
+          {shelfSections.map((section) => (
+            <section key={section.id} aria-labelledby={`shelf-${section.id}`}>
+              <h2 id={`shelf-${section.id}`} className="font-display text-2xl tracking-tight">
+                {section.label}
+              </h2>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {section.readings.map((reading) => (
+                  <ReadingCard
+                    key={reading.id}
+                    reading={reading}
+                    status={entryFor(reading, shelf.state).status}
+                    onTag={setTag}
+                  />
+                ))}
+              </div>
+            </section>
+          ))}
+          {shelfId === "all" && more.length > 0 ? (
             <section aria-labelledby="more-heading">
               <h2 id="more-heading" className="font-display text-2xl tracking-tight">
                 More to read

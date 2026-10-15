@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
-import { minutesLabel, seededReadings, wordCount } from "../src/lib/readings";
+import { SHELVES, minutesLabel, seededReadings, wordCount } from "../src/lib/readings";
 
 const forbidden = [
   "Gods do not answer letters",
@@ -25,7 +25,7 @@ describe("seeded shelf", () => {
       ],
     );
     assert.deepEqual(
-      seededReadings.filter((reading) => reading.collection !== "five-for-kyle").map((reading) => reading.slug),
+      seededReadings.filter((reading) => !reading.collection && !reading.shelf).map((reading) => reading.slug),
       [
         "frank-sinatra-has-a-cold",
         "consider-the-lobster",
@@ -110,7 +110,21 @@ describe("seeded shelf", () => {
     assert.deepEqual(seededReadings[1]?.tags, ["essay", "lyric essay", "nature", "Doyle"]);
     const slugs = seededReadings.map((reading) => reading.slug);
     assert.equal(new Set(slugs).size, slugs.length);
-    assert.equal(seededReadings.length, 9);
+    assert.equal(seededReadings.length, 59);
+    const shelved = seededReadings.filter((reading) => reading.shelf);
+    assert.equal(shelved.length, 50);
+    assert.deepEqual(
+      SHELVES.map((shelf) => shelved.filter((reading) => reading.shelf === shelf.id).length),
+      [8, 7, 8, 7, 7, 6, 7],
+    );
+    const urls = new Set(seededReadings.map((reading) => reading.url));
+    assert.equal(urls.size, seededReadings.length);
+    for (const reading of shelved) {
+      assert.equal(reading.blurb, reading.summary);
+      assert.ok(reading.resonance && reading.question && reading.readingTime);
+      assert.ok(wordCount(reading.summary ?? "") <= 80, reading.slug);
+      assert.ok(wordCount(reading.summary ?? "") >= 15, reading.slug);
+    }
     for (const reading of seededReadings) {
       assert.ok(reading.title && reading.author && reading.source);
       assert.match(reading.url, /^https?:\/\//);

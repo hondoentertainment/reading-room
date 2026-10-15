@@ -1,4 +1,5 @@
-import type { Reading, ReadingStatus } from "@/lib/types";
+import { shelfEssays } from "@/lib/shelf-essays";
+import type { Reading, ReadingStatus, ShelfId } from "@/lib/types";
 
 export const STATUS_LABEL: Record<ReadingStatus, string> = {
   "to-read": "To read",
@@ -142,6 +143,7 @@ export const seededReadings: Reading[] = [
       "~30 min",
     ),
   },
+  ...shelfEssays,
   {
     id: "frank-sinatra-has-a-cold",
     slug: "frank-sinatra-has-a-cold",
@@ -235,4 +237,18 @@ export function metaLine(
 
 export function isFiveForKyle(reading: Reading): boolean {
   return reading.collection === "five-for-kyle";
+}
+
+export const SHELVES: ReadonlyArray<{ id: ShelfId; label: string }> = [
+  { id: "sports-witness", label: "Sports & Witness" },
+  { id: "ai-tech", label: "AI, Tech & the Future" },
+  { id: "writing-craft", label: "Writing & Craft" },
+  { id: "founders-work", label: "Founders & Great Work" },
+  { id: "love-connection", label: "Love, Friendship & Connection" },
+  { id: "body-attention", label: "Body, Health & Attention" },
+  { id: "philosophy-meaning", label: "Philosophy & Meaning" },
+];
+
+export function shelfLabel(id: ShelfId): string {
+  return SHELVES.find((shelf) => shelf.id === id)?.label ?? id;
 }
