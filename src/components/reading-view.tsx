@@ -143,28 +143,56 @@ function ReadingArticle({
         <ArrowUpRight />
       </a>
 
-      <section className="mt-10" aria-labelledby="context-heading">
-        <h2 id="context-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
-          Context
-        </h2>
-        {reading.blurb ? (
-          <p className="mt-3 border-l-2 border-primary/50 pl-4 font-serif text-lg leading-8">
-            {reading.blurb}
-          </p>
-        ) : (
-          <p className="mt-3 text-sm leading-6 text-muted-foreground">
-            No context yet. The original is one link away.
-          </p>
-        )}
-        <p className="mt-3 text-sm text-muted-foreground">
-          Written for this shelf. It is not a substitute for the piece.
-        </p>
-      </section>
+      {reading.question ? (
+        <section
+          className="mt-8 rounded-2xl border border-primary/40 bg-accent px-5 py-5 sm:px-6"
+          aria-labelledby="question-heading"
+        >
+          <h2 id="question-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+            Read with this question
+          </h2>
+          <p className="mt-3 font-serif text-2xl leading-snug sm:text-[1.7rem]">{reading.question}</p>
+        </section>
+      ) : null}
 
-      {!ready ? (
-        <p className="mt-10 text-sm text-muted-foreground">Opening your notes…</p>
-      ) : (
+      {reading.resonance ? (
         <>
+          <section className="mt-10" aria-labelledby="summary-heading">
+            <h2 id="summary-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+              Summary
+            </h2>
+            <p className="mt-3 border-l-2 border-primary/50 pl-4 font-serif text-lg leading-8">
+              {reading.summary ?? reading.blurb}
+            </p>
+          </section>
+          <section className="mt-8" aria-labelledby="resonance-heading">
+            <h2 id="resonance-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+              Why it may resonate
+            </h2>
+            <p className="mt-3 font-serif text-lg leading-8">{reading.resonance}</p>
+          </section>
+        </>
+      ) : (
+        <section className="mt-10" aria-labelledby="context-heading">
+          <h2 id="context-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+            Context
+          </h2>
+          {reading.blurb ? (
+            <p className="mt-3 border-l-2 border-primary/50 pl-4 font-serif text-lg leading-8">
+              {reading.blurb}
+            </p>
+          ) : (
+            <p className="mt-3 text-sm leading-6 text-muted-foreground">
+              No context yet. The original is one link away.
+            </p>
+          )}
+          <p className="mt-3 text-sm text-muted-foreground">
+            Written for this shelf. It is not a substitute for the piece.
+          </p>
+        </section>
+      )}
+
+      <>
           {error ? (
             <p className="mt-8 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm" role="alert">
               {error}
@@ -253,7 +281,11 @@ function ReadingArticle({
                 <h2 id="notes-heading" className="font-display text-2xl tracking-tight">
                   Notes
                 </h2>
-                <p className="mt-1 text-sm text-muted-foreground">Markdown is fine. Kept on this device.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  {reading.question
+                    ? "Start from the question above. Markdown is fine. Kept on this device."
+                    : "Markdown is fine. Kept on this device."}
+                </p>
               </div>
               <div className="flex gap-2" role="group" aria-label="Notes view">
                 <Button
@@ -285,7 +317,10 @@ function ReadingArticle({
                   update((current) => setNotes(current, notes).entry);
                 }}
                 aria-labelledby="notes-heading"
-                placeholder="What you noticed, what you argue with, what you want to steal for your own sentences."
+                placeholder={
+                  reading.question ??
+                  "What you noticed, what you argue with, what you want to steal for your own sentences."
+                }
                 className="mt-4 min-h-64 font-serif text-lg leading-8 md:text-lg"
               />
             ) : (
@@ -357,8 +392,7 @@ function ReadingArticle({
           <div className="mt-10">
             <ShelfFile state={state} ready={ready} onImport={replace} />
           </div>
-        </>
-      )}
+      </>
     </article>
   );
 }
