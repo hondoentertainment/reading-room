@@ -257,6 +257,7 @@ export function addReading(
     tags: tags.tags,
     minutes,
     blurb,
+    note: "",
     defaultStatus: "to-read",
   };
 
@@ -336,6 +337,7 @@ function readCustom(value: unknown, takenSlugs: Set<string>): Reading | null {
     tags: tags.map((tag) => tag.slice(0, TAG_MAX)),
     minutes: minutes && minutes > 0 && minutes <= 600 ? Math.round(minutes) : null,
     blurb: value.blurb.trim(),
+    note: typeof value.note === "string" ? value.note.slice(0, 2_000) : "",
     defaultStatus: "to-read",
   };
   takenSlugs.add(reading.slug);

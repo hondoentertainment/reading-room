@@ -68,6 +68,49 @@ describe("seeded shelf", () => {
       urls["the-web-of-the-game"],
       "https://www.newyorker.com/magazine/1981/07/20/the-web-of-the-game",
     );
+    assert.equal(urls["software-2-0"], "https://karpathy.medium.com/software-2-0-a64152b37c35");
+    assert.equal(urls["the-scaling-hypothesis"], "https://gwern.net/scaling-hypothesis");
+    assert.equal(
+      urls["the-urgency-of-interpretability"],
+      "https://darioamodei.com/post/the-urgency-of-interpretability",
+    );
+    assert.equal(
+      urls["there-is-no-ai"],
+      "https://www.newyorker.com/science/annals-of-artificial-intelligence/there-is-no-ai",
+    );
+    assert.equal(urls["the-age-of-ai-has-begun"], "https://www.gatesnotes.com/the-age-of-ai-has-begun");
+    assert.equal(
+      urls["the-myth-of-a-superhuman-ai"],
+      "https://www.wired.com/2017/04/the-myth-of-a-superhuman-ai/",
+    );
+    assert.equal(
+      urls["this-changes-everything"],
+      "https://www.nytimes.com/2023/03/12/opinion/chatbots-artificial-intelligence-future-weirdness.html",
+    );
+    assert.equal(
+      urls["plentiful-high-paying-jobs-in-the-age-of-ai"],
+      "https://www.noahpinion.blog/p/plentiful-high-paying-jobs-in-the",
+    );
+    assert.equal(
+      urls["why-i-dont-think-agi-is-right-around-the-corner"],
+      "https://www.dwarkesh.com/p/timelines-june-2025",
+    );
+    assert.equal(urls["feature-visualization"], "https://distill.pub/2017/feature-visualization/");
+    assert.equal(urls["aggregation-theory"], "https://stratechery.com/2015/aggregation-theory/");
+    assert.equal(urls["shipping-out"], "https://harpers.org/archive/1996/01/shipping-out/");
+    assert.equal(urls["crying-in-h-mart"], "https://www.newyorker.com/culture/culture-desk/crying-in-h-mart");
+    assert.equal(urls["one-art"], "https://www.poetryfoundation.org/poems/47536/one-art");
+    assert.equal(urls["digging"], "https://www.poetryfoundation.org/poems/47555/digging");
+    assert.equal(urls["on-fear"], "https://www.poetryfoundation.org/poetrymagazine/articles/69815/on-fear");
+    assert.equal(
+      seededReadings.find((reading) => reading.slug === "digital-maoism")?.shelf,
+      "tech-internet",
+    );
+    assert.equal(seededReadings.find((reading) => reading.slug === "one-art")?.kind, "poem");
+    assert.equal(
+      seededReadings.find((reading) => reading.slug === "twenty-little-poems-that-could-save-america")?.kind,
+      "essay",
+    );
   });
 
   it("uses Kyle's notes for the five and keeps every blurb free of copied passages", () => {
@@ -112,12 +155,12 @@ describe("seeded shelf", () => {
     assert.deepEqual(seededReadings[1]?.tags, ["essay", "lyric essay", "nature", "Doyle"]);
     const slugs = seededReadings.map((reading) => reading.slug);
     assert.equal(new Set(slugs).size, slugs.length);
-    assert.equal(seededReadings.length, 73);
+    assert.equal(seededReadings.length, 125);
     const shelved = seededReadings.filter((reading) => reading.shelf);
-    assert.equal(shelved.length, 73);
+    assert.equal(shelved.length, 125);
     assert.deepEqual(
       SHELVES.map((shelf) => shelved.filter((reading) => reading.shelf === shelf.id).length),
-      [11, 22, 10, 8, 7, 6, 9],
+      [11, 36, 9, 10, 8, 7, 6, 9, 9, 8, 12],
     );
     for (const slug of [
       "situational-awareness",
@@ -135,6 +178,15 @@ describe("seeded shelf", () => {
       "why-ai-will-save-the-world",
       "the-bitter-lesson-versus-the-garbage-can",
       "lebron-james-an-odyssey",
+      "software-2-0",
+      "the-scaling-hypothesis",
+      "the-urgency-of-interpretability",
+      "there-is-no-ai",
+      "the-age-of-ai-has-begun",
+      "the-myth-of-a-superhuman-ai",
+      "this-changes-everything",
+      "plentiful-high-paying-jobs-in-the-age-of-ai",
+      "why-i-dont-think-agi-is-right-around-the-corner",
     ]) {
       assert.ok(slugs.includes(slug), slug);
     }
@@ -165,6 +217,21 @@ describe("seeded shelf", () => {
       assert.ok(reading.readingTime?.trim(), `${reading.slug} is missing a read time`);
       assert.equal(timeLabel(reading), reading.readingTime, reading.slug);
       assert.ok(reading.tags.length > 0, `${reading.slug} is missing tags`);
+      assert.equal(reading.note, "", `${reading.slug} should keep an empty note placeholder`);
+    }
+    const draft = seededReadings.find((reading) => reading.slug === "draft-no-4");
+    const saunders = seededReadings.find((reading) => reading.slug === "what-writers-really-do-when-they-write");
+    assert.deepEqual(draft?.pairsWith, ["what-writers-really-do-when-they-write"]);
+    assert.deepEqual(saunders?.pairsWith, ["draft-no-4"]);
+    for (const reading of seededReadings) {
+      for (const slug of reading.pairsWith ?? []) {
+        const partner = seededReadings.find((item) => item.slug === slug);
+        assert.ok(partner, `${reading.slug} pairs with a missing essay ${slug}`);
+        assert.ok(
+          partner?.pairsWith?.includes(reading.slug),
+          `${slug} does not pair back to ${reading.slug}`,
+        );
+      }
     }
   });
 });

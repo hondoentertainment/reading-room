@@ -4,15 +4,17 @@ import type { Reading, ShelfId } from "@/lib/types";
  * Fifty further readings, grouped for Kyle.
  * Summaries are original. The essays themselves stay at the links.
  */
-function piece(
+export function piece(
   shelf: ShelfId,
-  fields: Omit<Reading, "blurb" | "summary" | "defaultStatus" | "shelf" | "collection"> & {
+  fields: Omit<Reading, "blurb" | "summary" | "defaultStatus" | "shelf" | "collection" | "note"> & {
     summary: string;
+    note?: string;
   },
 ): Reading {
   return {
     ...fields,
     shelf,
+    note: fields.note ?? "",
     defaultStatus: "to-read",
     blurb: fields.summary,
     summary: fields.summary,
@@ -218,7 +220,7 @@ export const shelfEssays: Reading[] = [
       "A pair to his later essay on art. Read it while deciding what your own sentences, and your users' memories, lose when a model paraphrases them.",
     question: "Where is a blurry answer good enough, and where do I need the exact thing?",
   }),
-  piece("ai-tech", {
+  piece("tech-internet", {
     id: "digital-maoism",
     slug: "digital-maoism",
     title: "Digital Maoism",
@@ -236,7 +238,7 @@ export const shelfEssays: Reading[] = [
       "Agents can sound like a chorus. This is a reminder to keep a name on the work: yours, a user's, a writer's, not an anonymous average.",
     question: "Whose judgment do I want the product to preserve, instead of averaging it away?",
   }),
-  piece("ai-tech", {
+  piece("tech-internet", {
     id: "why-software-is-eating-the-world",
     slug: "why-software-is-eating-the-world",
     title: "Why Software Is Eating the World",
@@ -254,7 +256,7 @@ export const shelfEssays: Reading[] = [
       "Sports, health insurance, and writing all used to live outside software. This is the plain version of why a founder in those fields is, whether he planned it or not, in the software business.",
     question: "Which part of my work is still pretending it is not a software problem?",
   }),
-  piece("ai-tech", {
+  piece("tech-internet", {
     id: "the-long-tail",
     slug: "the-long-tail",
     title: "The Long Tail",
@@ -272,7 +274,7 @@ export const shelfEssays: Reading[] = [
       "Deep Seats and a poetry practice are both long-tail bets: not everyone wants them, and the people who do may care more than a mass audience would.",
     question: "Who is the small group I would rather serve well than impress broadly?",
   }),
-  piece("ai-tech", {
+  piece("tech-internet", {
     id: "generation-why",
     slug: "generation-why",
     title: "Generation Why?",
@@ -541,6 +543,168 @@ export const shelfEssays: Reading[] = [
     resonance:
       "You have Sutton on this shelf already, and you have fourteen years of watching institutions absorb software slowly. This is the argument between those two experiences.",
     question: "Where is my company still a garbage can, and where is scale actually the advantage?",
+  }),
+  piece("ai-tech", {
+    id: "software-2-0",
+    slug: "software-2-0",
+    title: "Software 2.0",
+    author: "Andrej Karpathy",
+    year: 2017,
+    published: "November 11, 2017",
+    source: "Medium",
+    url: "https://karpathy.medium.com/software-2-0-a64152b37c35",
+    tags: ["essay", "AI", "software", "Karpathy"],
+    minutes: 10,
+    readingTime: "~10 min",
+    summary:
+      "Karpathy describes a shift in which software is trained from data instead of written as explicit rules, and he treats the dataset, the goal, and the feedback as the new program.",
+    resonance:
+      "Agents and product work already sit on this side of the line. The useful question is which parts you still want to specify by hand, and which you would rather train.",
+    question: "Which part of my product is still a pile of rules that a dataset would describe better?",
+  }),
+  piece("ai-tech", {
+    id: "the-scaling-hypothesis",
+    slug: "the-scaling-hypothesis",
+    title: "The Scaling Hypothesis",
+    author: "Gwern Branwen",
+    year: 2020,
+    published: "2020",
+    source: "Gwern.net",
+    url: "https://gwern.net/scaling-hypothesis",
+    tags: ["essay", "AI", "scaling", "Gwern"],
+    minutes: 60,
+    readingTime: "~60 min",
+    summary:
+      "Gwern argues that many surprising abilities in modern AI come from scaling data, compute, and model size, and that this pattern is a hypothesis about the future rather than a finished law.",
+    resonance:
+      "A long bet to read beside Sutton. It is the argument that more scale, not a cleverer trick, is what keeps changing the tools you ship with.",
+    question: "Where am I waiting for a new idea when the next gain is mostly more scale?",
+  }),
+  piece("ai-tech", {
+    id: "the-urgency-of-interpretability",
+    slug: "the-urgency-of-interpretability",
+    title: "The Urgency of Interpretability",
+    author: "Dario Amodei",
+    year: 2025,
+    published: "April 2025",
+    source: "darioamodei.com",
+    url: "https://darioamodei.com/post/the-urgency-of-interpretability",
+    tags: ["essay", "AI", "safety", "Amodei"],
+    minutes: 25,
+    readingTime: "~25 min",
+    summary:
+      "Amodei makes the case that understanding the insides of powerful models is now an urgent practical project, because the systems are advancing faster than our ability to see why they do what they do.",
+    resonance:
+      "A pair to his hopeful essay on this shelf. Before an agent takes a real task in health or sports, it helps to ask whether anyone can say why it chose that answer.",
+    question: "Which decision in my product would I refuse to ship if I could not explain it?",
+  }),
+  piece("ai-tech", {
+    id: "there-is-no-ai",
+    slug: "there-is-no-ai",
+    title: "There Is No A.I.",
+    author: "Jaron Lanier",
+    year: 2023,
+    published: "April 20, 2023",
+    source: "The New Yorker",
+    url: "https://www.newyorker.com/science/annals-of-artificial-intelligence/there-is-no-ai",
+    tags: ["essay", "AI", "technology", "Lanier"],
+    minutes: 20,
+    readingTime: "~20 min",
+    summary:
+      "Lanier rejects the idea of an independent artificial mind and argues that so-called AI is a rearrangement of human work, data, and labor that still needs authors, credit, and responsibility.",
+    resonance:
+      "A skeptic's correction for a shelf full of inevitable futures. The model is still made of other people's work, which matters if you are the one putting a name on the product.",
+    question: "Whose work is inside the tool I am about to call intelligent?",
+  }),
+  piece("ai-tech", {
+    id: "the-age-of-ai-has-begun",
+    slug: "the-age-of-ai-has-begun",
+    title: "The Age of AI has begun",
+    author: "Bill Gates",
+    year: 2023,
+    published: "March 21, 2023",
+    source: "GatesNotes",
+    url: "https://www.gatesnotes.com/the-age-of-ai-has-begun",
+    tags: ["essay", "AI", "future", "Gates"],
+    minutes: 15,
+    readingTime: "~15 min",
+    summary:
+      "Gates treats recent AI as a technology on the order of the personal computer and the internet, and he asks how it could widen or narrow gaps in health, education, and daily work.",
+    resonance:
+      "Health insurance is the world this essay keeps pointing at. Read it as a map of where a new tool might actually reduce an inequity you have already seen up close.",
+    question: "If AI is as basic as the internet, where in health or learning would I want it used first?",
+  }),
+  piece("ai-tech", {
+    id: "the-myth-of-a-superhuman-ai",
+    slug: "the-myth-of-a-superhuman-ai",
+    title: "The Myth of a Superhuman AI",
+    author: "Kevin Kelly",
+    year: 2017,
+    published: "April 25, 2017",
+    source: "Wired",
+    url: "https://www.wired.com/2017/04/the-myth-of-a-superhuman-ai/",
+    tags: ["essay", "AI", "future", "Kelly"],
+    minutes: 20,
+    readingTime: "~20 min",
+    summary:
+      "Kelly argues that a single superhuman artificial intelligence is the wrong picture, and that the future looks more like many specialized tools woven into human systems than one mind that replaces us.",
+    resonance:
+      "A brake on the single-mind story. Useful next to the more triumphant essays, especially if you are building tools for particular fans rather than a universal intelligence.",
+    question: "Am I picturing one superhuman system, or a set of tools that still need a person?",
+  }),
+  piece("ai-tech", {
+    id: "this-changes-everything",
+    slug: "this-changes-everything",
+    title: "This Changes Everything",
+    author: "Ezra Klein",
+    year: 2023,
+    published: "March 12, 2023",
+    source: "The New York Times",
+    url: "https://www.nytimes.com/2023/03/12/opinion/chatbots-artificial-intelligence-future-weirdness.html",
+    tags: ["essay", "AI", "future", "Klein"],
+    minutes: 15,
+    readingTime: "~15 min",
+    summary:
+      "Klein asks readers to take seriously the claim that AI could matter more than electricity, and to notice how little our institutions are built for a world that stops resembling the recent past.",
+    resonance:
+      "The impatient version of the future essays. It asks you to drop the habit of assuming next year will feel like this one, which a long novel and a slow company both depend on.",
+    question: "What am I planning as if the next ten years will resemble the last ten?",
+  }),
+  piece("ai-tech", {
+    id: "plentiful-high-paying-jobs-in-the-age-of-ai",
+    slug: "plentiful-high-paying-jobs-in-the-age-of-ai",
+    title: "Plentiful, high-paying jobs in the age of AI",
+    author: "Noah Smith",
+    year: 2024,
+    published: "March 17, 2024",
+    source: "Noahpinion",
+    url: "https://www.noahpinion.blog/p/plentiful-high-paying-jobs-in-the",
+    tags: ["essay", "AI", "work", "Smith"],
+    minutes: 25,
+    readingTime: "~25 min",
+    summary:
+      "Smith uses comparative advantage to argue that humans could still have plentiful, well-paid work even if machines become better at every task, so long as AI itself remains a scarce resource.",
+    resonance:
+      "A hopeful economics argument to set beside the fear that the work disappears. It will not settle the question, but it gives a founder a reason to think jobs can change without vanishing.",
+    question: "Which of my tasks would I still pay a person to do even if a model could do them faster?",
+  }),
+  piece("ai-tech", {
+    id: "why-i-dont-think-agi-is-right-around-the-corner",
+    slug: "why-i-dont-think-agi-is-right-around-the-corner",
+    title: "Why I don't think AGI is right around the corner",
+    author: "Dwarkesh Patel",
+    year: 2025,
+    published: "June 2, 2025",
+    source: "dwarkesh.com",
+    url: "https://www.dwarkesh.com/p/timelines-june-2025",
+    tags: ["essay", "AI", "future", "Patel"],
+    minutes: 20,
+    readingTime: "~20 min",
+    summary:
+      "Patel explains why he does not expect artificial general intelligence in the next few years, pointing to gaps in data, continual learning, and the messy work of turning a model into a reliable worker.",
+    resonance:
+      "A calendar correction for the essays that treat AGI as a near appointment. Read it when a demo feels like the whole future has already arrived.",
+    question: "What still has to be true, besides a better demo, before I would bet the company on a short timeline?",
   }),
   piece("writing-craft", {
     id: "politics-and-the-english-language",

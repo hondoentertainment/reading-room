@@ -1,3 +1,4 @@
+import { moreEssays } from "@/lib/more-essays";
 import { shelfEssays } from "@/lib/shelf-essays";
 import type { Reading, ReadingStatus, ShelfId } from "@/lib/types";
 
@@ -47,7 +48,54 @@ export const whereToStart = [
   },
 ] as const;
 
-export const seededReadings: Reading[] = [
+/**
+ * Curated pairs. Each slug points at essays that belong beside it.
+ * Both directions are listed so either card can link to the other.
+ */
+const PAIRS: Record<string, string[]> = {
+  "draft-no-4": ["what-writers-really-do-when-they-write"],
+  "what-writers-really-do-when-they-write": ["draft-no-4"],
+  "the-bitter-lesson": ["the-bitter-lesson-versus-the-garbage-can"],
+  "the-bitter-lesson-versus-the-garbage-can": ["the-bitter-lesson"],
+  "why-ai-isnt-going-to-make-art": ["chatgpt-is-a-blurry-jpeg-of-the-web"],
+  "chatgpt-is-a-blurry-jpeg-of-the-web": ["why-ai-isnt-going-to-make-art"],
+  "machines-of-loving-grace": ["the-urgency-of-interpretability"],
+  "the-urgency-of-interpretability": ["machines-of-loving-grace"],
+  "federer-as-religious-experience": ["the-web-of-the-game"],
+  "the-web-of-the-game": ["federer-as-religious-experience"],
+  "politics-and-the-english-language": ["shooting-an-elephant"],
+  "shooting-an-elephant": ["politics-and-the-english-language"],
+  "how-to-do-great-work": ["the-bus-ticket-theory-of-genius"],
+  "the-bus-ticket-theory-of-genius": ["how-to-do-great-work"],
+  "this-is-water": ["the-enchiridion"],
+  "the-enchiridion": ["this-is-water"],
+  "why-ai-will-save-the-world": ["the-myth-of-a-superhuman-ai"],
+  "the-myth-of-a-superhuman-ai": ["why-ai-will-save-the-world"],
+  "there-is-no-ai": ["digital-maoism"],
+  "digital-maoism": ["there-is-no-ai"],
+  "the-poet": ["the-summer-day", "on-fear"],
+  "the-summer-day": ["the-poet"],
+  "on-fear": ["the-poet"],
+  "the-philosophy-of-composition": ["one-art", "digging"],
+  "one-art": ["the-philosophy-of-composition"],
+  "digging": ["the-philosophy-of-composition"],
+  "someday-ill-love-ocean-vuong": ["having-a-coke-with-you"],
+  "having-a-coke-with-you": ["someday-ill-love-ocean-vuong"],
+  "shipping-out": ["consider-the-lobster"],
+  "consider-the-lobster": ["shipping-out"],
+};
+
+type ReadingSeed = Omit<Reading, "note"> & { note?: string };
+
+function attachShelfMeta(reading: ReadingSeed): Reading {
+  return {
+    ...reading,
+    note: reading.note ?? "",
+    pairsWith: reading.pairsWith ?? PAIRS[reading.id],
+  };
+}
+
+const seededSource: ReadingSeed[] = [
   {
     id: "federer-as-religious-experience",
     slug: "federer-as-religious-experience",
@@ -149,6 +197,7 @@ export const seededReadings: Reading[] = [
     ),
   },
   ...shelfEssays,
+  ...moreEssays,
   {
     id: "frank-sinatra-has-a-cold",
     slug: "frank-sinatra-has-a-cold",
@@ -239,6 +288,8 @@ export const seededReadings: Reading[] = [
   },
 ];
 
+export const seededReadings: Reading[] = seededSource.map(attachShelfMeta);
+
 export function wordCount(text: string): number {
   const words = text.trim().match(/[A-Za-z0-9’']+/g);
   return words?.length ?? 0;
@@ -272,14 +323,18 @@ export function isFiveForKyle(reading: Reading): boolean {
   return reading.collection === "five-for-kyle";
 }
 
-export const SHELVES: ReadonlyArray<{ id: ShelfId; label: string }> = [
-  { id: "sports-witness", label: "Sports & Witness" },
-  { id: "ai-tech", label: "AI, Tech & the Future" },
-  { id: "writing-craft", label: "Writing & Craft" },
-  { id: "founders-work", label: "Founders & Great Work" },
-  { id: "love-connection", label: "Love, Friendship & Connection" },
-  { id: "body-attention", label: "Body, Health & Attention" },
-  { id: "philosophy-meaning", label: "Philosophy & Meaning" },
+export const SHELVES: ReadonlyArray<{ id: ShelfId; label: string; color: string; roman: string }> = [
+  { id: "sports-witness", label: "Sports & Witness", color: "#8C3B2E", roman: "I" },
+  { id: "ai-tech", label: "AI", color: "#33546B", roman: "II" },
+  { id: "tech-internet", label: "Tech & the Internet", color: "#3D6A6A", roman: "III" },
+  { id: "writing-craft", label: "Writing & Craft", color: "#7A5A2B", roman: "IV" },
+  { id: "founders-work", label: "Founders & Great Work", color: "#3E5A43", roman: "V" },
+  { id: "love-connection", label: "Love, Friendship & Connection", color: "#9A4B5A", roman: "VI" },
+  { id: "body-attention", label: "Body, Health & Attention", color: "#6B5B86", roman: "VII" },
+  { id: "philosophy-meaning", label: "Philosophy & Meaning", color: "#6A5344", roman: "VIII" },
+  { id: "humor", label: "Humor", color: "#A5683A", roman: "IX" },
+  { id: "memoir", label: "Memoir & Personal Essay", color: "#5C6B7A", roman: "X" },
+  { id: "poetry", label: "Poetry", color: "#6E4F6A", roman: "XI" },
 ];
 
 export function shelfLabel(id: ShelfId): string {

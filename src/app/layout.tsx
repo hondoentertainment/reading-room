@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Fraunces, Geist, Geist_Mono, Newsreader } from "next/font/google";
+import { Fraunces, Geist_Mono, Inter, Source_Serif_4 } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
-const sans = Geist({
+const sans = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -15,16 +15,17 @@ const mono = Geist_Mono({
 
 const display = Fraunces({
   subsets: ["latin"],
+  style: ["normal", "italic"],
   variable: "--font-display",
 });
 
-const serif = Newsreader({
+const serif = Source_Serif_4({
   subsets: ["latin"],
   style: ["normal", "italic"],
   variable: "--font-serif",
 });
 
-const themeBoot = `(function(){try{var t=localStorage.getItem("krr-theme");if(t==="dark"||(t!=="light"&&matchMedia("(prefers-color-scheme: dark)").matches))document.documentElement.classList.add("dark")}catch(e){}})();`;
+const themeBoot = `(function(){try{if(localStorage.getItem("krr-theme")==="dark")document.documentElement.classList.add("dark")}catch(e){}})();`;
 
 export const metadata: Metadata = {
   title: {
