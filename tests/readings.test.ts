@@ -155,12 +155,12 @@ describe("seeded shelf", () => {
     assert.deepEqual(seededReadings[1]?.tags, ["essay", "lyric essay", "nature", "Doyle"]);
     const slugs = seededReadings.map((reading) => reading.slug);
     assert.equal(new Set(slugs).size, slugs.length);
-    assert.equal(seededReadings.length, 125);
+    assert.equal(seededReadings.length, 131);
     const shelved = seededReadings.filter((reading) => reading.shelf);
-    assert.equal(shelved.length, 125);
+    assert.equal(shelved.length, 131);
     assert.deepEqual(
       SHELVES.map((shelf) => shelved.filter((reading) => reading.shelf === shelf.id).length),
-      [11, 36, 9, 10, 8, 7, 6, 9, 9, 8, 12],
+      [11, 36, 9, 10, 8, 7, 6, 9, 9, 8, 18],
     );
     for (const slug of [
       "situational-awareness",
@@ -217,7 +217,12 @@ describe("seeded shelf", () => {
       assert.ok(reading.readingTime?.trim(), `${reading.slug} is missing a read time`);
       assert.equal(timeLabel(reading), reading.readingTime, reading.slug);
       assert.ok(reading.tags.length > 0, `${reading.slug} is missing tags`);
-      assert.equal(reading.note, "", `${reading.slug} should keep an empty note placeholder`);
+      if (reading.note) {
+        assert.equal(reading.note, "Performance.", `${reading.slug} note should only label a performance`);
+        assert.equal(reading.kind, "poem", reading.slug);
+      } else {
+        assert.equal(reading.note, "", `${reading.slug} should keep an empty note placeholder`);
+      }
     }
     const draft = seededReadings.find((reading) => reading.slug === "draft-no-4");
     const saunders = seededReadings.find((reading) => reading.slug === "what-writers-really-do-when-they-write");
