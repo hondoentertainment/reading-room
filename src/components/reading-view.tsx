@@ -11,6 +11,8 @@ import { Slider } from "@/components/ui/slider";
 import { Textarea } from "@/components/ui/textarea";
 import { useShelf } from "@/hooks/use-shelf";
 import { STATUS_LABEL, findSeeded, metaLine } from "@/lib/readings";
+import { catalog } from "@/lib/shelf";
+import { isPaywalled } from "@/lib/shelf-view";
 import {
   HIGHLIGHT_MAX,
   addHighlight,
@@ -116,13 +118,29 @@ function ReadingArticle({
         ← Shelf
       </Link>
       <p className="mt-8 text-xs tracking-[0.18em] text-muted-foreground uppercase">
-        {STATUS_LABEL[entry.status]}
+        {reading.kind === "poem" ? "Poem" : "Essay"} · {STATUS_LABEL[entry.status]}
       </p>
       <h1 className="mt-3 font-display text-4xl leading-[1.05] tracking-tight sm:text-5xl">
         {reading.title}
       </h1>
-      <p className="mt-4 font-serif text-xl text-muted-foreground italic">{reading.author}</p>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">{metaLine(reading)}</p>
+      <Link
+        href={`/?author=${encodeURIComponent(reading.author)}`}
+        className="mt-4 inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground hover:bg-accent"
+      >
+        {reading.author}
+      </Link>
+      <p className="mt-3 flex flex-wrap items-center gap-2 text-sm leading-6 text-muted-foreground">
+        <span>{metaLine(reading)}</span>
+        {isPaywalled(reading.source) ? (
+          <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-foreground">
+            Paywall
+          </span>
+        ) : (
+          <span className="rounded-full border border-border px-2 py-0.5 text-xs font-medium text-foreground">
+            Free to read
+          </span>
+        )}
+      </p>
       {reading.tags.length > 0 ? (
         <ul className="mt-4 flex flex-wrap gap-2">
           {reading.tags.map((tag) => (
@@ -191,6 +209,28 @@ function ReadingArticle({
           </p>
         </section>
       )}
+
+      {(reading.pairsWith ?? []).length > 0 ? (
+        <section className="mt-8" aria-labelledby="pairs-heading">
+          <h2 id="pairs-heading" className="text-xs tracking-[0.18em] text-muted-foreground uppercase">
+            Pairs well with
+          </h2>
+          <ul className="mt-3 space-y-2">
+            {(reading.pairsWith ?? []).map((slug) => {
+              const partner = catalog(state).find((item) => item.slug === slug);
+              if (!partner) return null;
+              return (
+                <li key={slug}>
+                  <Link href={`/reading/${partner.slug}`} className="font-serif text-lg underline decoration-border underline-offset-4">
+                    {partner.title}
+                  </Link>
+                  <span className="text-muted-foreground"> · {partner.author}</span>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      ) : null}
 
       <>
           {error ? (
@@ -279,12 +319,10 @@ function ReadingArticle({
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div>
                 <h2 id="notes-heading" className="font-display text-2xl tracking-tight">
-                  Notes
+                  Marginal note
                 </h2>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  {reading.question
-                    ? "Start from the question above. Markdown is fine. Kept on this device."
-                    : "Markdown is fine. Kept on this device."}
+                  Shown on the shelf card. Kept on this device. Markdown is fine.
                 </p>
               </div>
               <div className="flex gap-2" role="group" aria-label="Notes view">
@@ -310,6 +348,7 @@ function ReadingArticle({
             </div>
             {mode === "write" ? (
               <Textarea
+                placeholder="Add a marginal note…"
                 value={entry.notes}
                 onChange={(event) => {
                   const notes = event.target.value;
@@ -317,10 +356,6 @@ function ReadingArticle({
                   update((current) => setNotes(current, notes).entry);
                 }}
                 aria-labelledby="notes-heading"
-                placeholder={
-                  reading.question ??
-                  "What you noticed, what you argue with, what you want to steal for your own sentences."
-                }
                 className="mt-4 min-h-64 font-serif text-lg leading-8 md:text-lg"
               />
             ) : (

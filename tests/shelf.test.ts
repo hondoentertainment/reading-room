@@ -85,6 +85,7 @@ describe("shelf", () => {
     if (!result.ok) return;
     assert.equal(result.slug, "a-new-piece");
     assert.deepEqual(catalog(result.state).at(-1)?.tags, ["essay", "night"]);
+    assert.equal(catalog(result.state).at(-1)?.note, "");
     assert.equal(catalog(result.state)[0]?.slug, "federer-as-religious-experience");
     const again = addReading(
       result.state,

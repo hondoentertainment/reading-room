@@ -1,286 +1,522 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ShelfFile } from "@/components/shelf-file";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useShelf } from "@/hooks/use-shelf";
-import { SHELVES, STATUS_LABEL, isFiveForKyle, shelfLabel, timeLabel } from "@/lib/readings";
-import { allTags, catalog, entryFor } from "@/lib/shelf";
+import { SHELVES, timeLabel } from "@/lib/readings";
+import { catalog, entryFor, setStatus, withEntry } from "@/lib/shelf";
+import {
+  arrangeShelf,
+  isPaywalled,
+  matchesShelfQuery,
+  readShelfQuery,
+} from "@/lib/shelf-view";
 import type { Reading, ReadingStatus, ShelfId } from "@/lib/types";
-import { cn } from "@/lib/utils";
 
-const statuses: Array<ReadingStatus | "all"> = ["all", "to-read", "reading", "done"];
+const PREVIEW_COUNT = 4;
+const AUTHOR_PREVIEW = 12;
 
-function Chip({
-  pressed,
-  onClick,
-  children,
-}: {
-  pressed: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      aria-pressed={pressed}
-      onClick={onClick}
-      className={cn(
-        "shrink-0 rounded-full border px-3 py-1.5 text-sm transition-colors",
-        pressed
-          ? "border-primary bg-primary text-primary-foreground"
-          : "border-border bg-card text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {children}
-    </button>
-  );
+function shelfMeta(id: ShelfId | undefined) {
+  return SHELVES.find((shelf) => shelf.id === id);
 }
 
-function statusBadgeClass(status: ReadingStatus): string {
-  if (status === "reading") return "border-transparent bg-primary text-primary-foreground";
-  if (status === "done") {
-    return "border-transparent bg-[oklch(0.42_0.06_155)] text-[oklch(0.97_0.012_90)] dark:bg-[oklch(0.74_0.07_155)] dark:text-[oklch(0.22_0.03_155)]";
-  }
-  return "border-border bg-transparent text-muted-foreground";
+function kindLabel(reading: Reading): string {
+  return reading.kind === "poem" ? "Poem" : "Essay";
 }
 
-function ReadingCard({
-  reading,
-  status,
-  onTag,
-}: {
-  reading: Reading;
-  status: ReadingStatus;
-  onTag: (tag: string) => void;
-}) {
-  const readTime = timeLabel(reading) ?? "Untimed";
-  const details = [reading.published, reading.source].filter(Boolean).join(" · ");
-
-  return (
-    <article className="flex min-w-0 flex-col self-start rounded-2xl border border-border bg-card p-5 shadow-[0_1px_0_oklch(0.4_0.03_50/0.04)]">
-      {isFiveForKyle(reading) ? (
-        <p className="mb-3 text-xs font-semibold tracking-[0.16em] text-primary uppercase">Start here</p>
-      ) : null}
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant="outline" className={cn("h-6 px-2.5", statusBadgeClass(status))}>
-          {STATUS_LABEL[status]}
-        </Badge>
-        <span className="ml-auto inline-flex shrink-0 items-center rounded-full bg-muted px-2.5 py-1 text-xs font-medium tracking-wide text-foreground">
-          {readTime}
-        </span>
-      </div>
-      <h2 className="mt-4 font-display text-[1.65rem] leading-tight tracking-tight">
-        <Link
-          href={`/reading/${reading.slug}`}
-          className="rounded-sm underline-offset-4 hover:underline focus-visible:underline focus-visible:outline-none"
-        >
-          {reading.title}
-        </Link>
-      </h2>
-      <p className="mt-2 font-serif text-lg text-foreground italic">{reading.author}</p>
-      {details ? <p className="mt-3 text-sm leading-6 text-muted-foreground">{details}</p> : null}
-      <p className="mt-3">
-        <span className="inline-flex rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-          {reading.shelf ? shelfLabel(reading.shelf) : "Unshelved"}
-        </span>
-      </p>
-      {reading.summary ? (
-        <p className="mt-3 font-serif text-base leading-7 text-foreground">{reading.summary}</p>
-      ) : null}
-      <ul className="mt-4 flex flex-wrap gap-2">
-        {reading.tags.length > 0 ? (
-          reading.tags.map((tag) => (
-            <li key={tag}>
-              <button
-                type="button"
-                onClick={() => onTag(tag)}
-                className="rounded-full bg-secondary px-2.5 py-1 text-xs text-secondary-foreground hover:bg-accent"
-              >
-                {tag}
-              </button>
-            </li>
-          ))
-        ) : (
-          <li className="rounded-full bg-secondary px-2.5 py-1 text-xs text-muted-foreground">No tags</li>
-        )}
-      </ul>
-    </article>
-  );
-}
-
-function ShelfSkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2" aria-hidden="true">
-      {Array.from({ length: 4 }, (_, index) => (
-        <div key={index} className="h-56 animate-pulse rounded-2xl border border-border bg-card" />
-      ))}
-    </div>
-  );
+function noteText(reading: Reading, notes: string): string {
+  return notes.trim() || reading.note.trim();
 }
 
 export function LibraryView() {
   const shelf = useShelf();
-  const [query, setQuery] = useState("");
-  const [status, setStatus] = useState<ReadingStatus | "all">("all");
-  const [tag, setTag] = useState<string | null>(null);
-  const [shelfId, setShelfId] = useState<ShelfId | "all">("all");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const filters = readShelfQuery(searchParams);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const [query, setQuery] = useState(filters.q);
+  const [syncedQuery, setSyncedQuery] = useState(filters.q);
+  if (filters.q !== syncedQuery) {
+    setSyncedQuery(filters.q);
+    setQuery(filters.q);
+  }
+  const [surpriseMessage, setSurpriseMessage] = useState<string | null>(null);
+  const [authorsOpen, setAuthorsOpen] = useState(false);
+  const [closed, setClosed] = useState<Record<string, boolean>>({});
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
+    const id = window.location.hash.replace(/^#/, "");
+    if (!id) return;
+    document.getElementById(id)?.scrollIntoView();
+  }, []);
+
+  useEffect(() => {
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "/" || event.metaKey || event.ctrlKey || event.altKey) return;
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      searchRef.current?.focus();
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
+
+  function replaceQuery(patch: Record<string, string | null>) {
+    const next = new URLSearchParams(window.location.search);
+    for (const [key, value] of Object.entries(patch)) {
+      if (value) next.set(key, value);
+      else next.delete(key);
+    }
+    const qs = next.toString();
+    const hash = window.location.hash;
+    router.replace(`${pathname}${qs ? `?${qs}` : ""}${hash}`, { scroll: false });
+  }
 
   const readings = catalog(shelf.state);
-  const tags = useMemo(() => allTags(readings), [readings]);
-  const visible = readings.filter((reading) => {
-    const entry = entryFor(reading, shelf.state);
-    if (status !== "all" && entry.status !== status) return false;
-    if (tag && !reading.tags.some((item) => item.toLowerCase() === tag.toLowerCase())) return false;
-    if (shelfId !== "all" && reading.shelf !== shelfId) return false;
-    const needle = query.trim().toLowerCase();
-    if (!needle) return true;
-    const haystack = [
-      reading.title,
-      reading.author,
-      reading.source,
-      reading.published,
-      reading.summary,
-      reading.resonance,
-      reading.question,
-      ...reading.tags,
-    ]
-      .join(" ")
-      .toLowerCase();
-    return haystack.includes(needle);
-  });
-  const filtering = query.trim() !== "" || status !== "all" || tag !== null || shelfId !== "all";
+  const bySlug = useMemo(() => new Map(readings.map((reading) => [reading.slug, reading])), [readings]);
+  const activeQuery = { ...filters, q: query };
+  const visible = readings.filter((reading) =>
+    matchesShelfQuery(reading, entryFor(reading, shelf.state), activeQuery),
+  );
+  const arranged = arrangeShelf(visible);
+  const filtering =
+    query.trim() !== "" ||
+    filters.status !== "all" ||
+    filters.tag !== null ||
+    filters.shelf !== "all" ||
+    filters.author !== null ||
+    filters.unread;
+
+  const shelfCounts = useMemo(() => {
+    const counts = new Map<ShelfId, number>();
+    for (const reading of readings) {
+      if (!reading.shelf) continue;
+      counts.set(reading.shelf, (counts.get(reading.shelf) ?? 0) + 1);
+    }
+    return counts;
+  }, [readings]);
+
+  const rankedAuthors = useMemo(() => {
+    const counts = new Map<string, { name: string; count: number }>();
+    for (const reading of readings) {
+      const name = reading.author.trim();
+      const key = name.toLowerCase();
+      if (!name) continue;
+      const current = counts.get(key);
+      if (current) current.count += 1;
+      else counts.set(key, { name, count: 1 });
+    }
+    return [...counts.values()].sort(
+      (a, b) => b.count - a.count || a.name.localeCompare(b.name),
+    );
+  }, [readings]);
+
+  const authorChips = authorsOpen ? rankedAuthors : rankedAuthors.slice(0, AUTHOR_PREVIEW);
+  const hiddenAuthors = Math.max(0, rankedAuthors.length - AUTHOR_PREVIEW);
+
+  const doneCount = readings.filter((reading) => entryFor(reading, shelf.state).status === "done").length;
+  const unreadCount = readings.length - doneCount;
+  const notedCount = readings.filter((reading) =>
+    Boolean(noteText(reading, entryFor(reading, shelf.state).notes)),
+  ).length;
+  const minutesLeft = readings.reduce((total, reading) => {
+    if (entryFor(reading, shelf.state).status === "done") return total;
+    return total + (reading.minutes ?? 0);
+  }, 0);
+  const hoursLeft = Math.round(minutesLeft / 60);
+  const readShare = readings.length === 0 ? 0 : Math.round((doneCount / readings.length) * 100);
+
+  function mark(reading: Reading, status: ReadingStatus) {
+    shelf.commit((current) =>
+      withEntry(current, reading.id, setStatus(entryFor(reading, current), status)),
+    );
+  }
+
+  function surprise() {
+    const unread = readings.filter((reading) => entryFor(reading, shelf.state).status !== "done");
+    if (unread.length === 0) {
+      setSurpriseMessage("Every piece on the shelf is marked read.");
+      return;
+    }
+    setSurpriseMessage(null);
+    const pick = unread[Math.floor(Math.random() * unread.length)];
+    if (!pick) return;
+    router.push(`/reading/${pick.slug}`);
+  }
+
+  function sectionOpen(id: string, index: number) {
+    if (filtering) return true;
+    if (filters.shelf !== "all") return id === `shelf-${filters.shelf}`;
+    if (id in closed) return !closed[id];
+    return index === 0;
+  }
+
+  const ledgerQuestion =
+    arranged.startHere[0]?.question ??
+    readings.find((reading) => reading.question)?.question ??
+    "What is worth keeping?";
 
   return (
-    <div className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
-      <div className="max-w-2xl">
-        <p className="text-xs tracking-[0.18em] text-muted-foreground uppercase">The shelf</p>
-        <h1 className="mt-3 font-display text-4xl tracking-tight sm:text-5xl">{"Kyle's Reading Room"}</h1>
-        <p className="mt-4 font-serif text-lg leading-8 text-muted-foreground">
-          One shelf for sports, AI, writing, and the hope of being known. The five marked Start here are the place to begin.
+    <div className="room">
+      <header className="mast">
+        <div className="topline">
+          <span className="rule" />
+          <span>Est. 2026</span>
+          <span aria-hidden="true">·</span>
+          <span>A personal library</span>
+          <span aria-hidden="true">·</span>
+          <span>{readings.length} volumes</span>
+          <span className="rule" />
+        </div>
+        <h1>
+          Kyle&apos;s <em>Reading Room</em>
+        </h1>
+        <p className="tagline">Essays, poems, and the hope of being known.</p>
+        <div className="dbl" />
+      </header>
+
+      {arranged.startHere.length > 0 ? (
+        <section aria-labelledby="start-heading">
+          <div className="secthead">
+            <p className="kicker" id="start-heading">
+              Start here
+            </p>
+            <h2>Five to begin</h2>
+            <p className="hint">Pinned in the order they were chosen. They also sit in their shelves.</p>
+          </div>
+          <div className="startrow">
+            {arranged.startHere.map((reading, index) => {
+              const meta = shelfMeta(reading.shelf);
+              return (
+                <article key={reading.id} className="sh" style={{ ["--shelf" as string]: meta?.color }}>
+                  <div className="cap" />
+                  <p className="num">{String(index + 1).padStart(2, "0")}</p>
+                  <p className="shshelf">{meta?.label}</p>
+                  <h3>
+                    <Link href={`/reading/${reading.slug}`}>{reading.title}</Link>
+                  </h3>
+                  <p className="sha">{reading.author}</p>
+                  <p className="shrt">{timeLabel(reading)}</p>
+                </article>
+              );
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      <section className="controls" aria-label="Filters">
+        <div className="searchrow">
+          <label className="search">
+            <span className="mag" aria-hidden="true">
+              ⌕
+            </span>
+            <input
+              ref={searchRef}
+              id="shelf-search"
+              value={query}
+              onChange={(event) => {
+                const value = event.target.value;
+                setQuery(value);
+                replaceQuery({ q: value.trim() ? value : null });
+              }}
+              placeholder="Title, author, or summary"
+            />
+            <kbd className="kbd">/</kbd>
+          </label>
+          <button
+            type="button"
+            className="unread"
+            aria-pressed={filters.unread}
+            onClick={() => replaceQuery({ unread: filters.unread ? null : "1" })}
+          >
+            <span className={filters.unread ? "sw on" : "sw"}>
+              <span className="knob" />
+            </span>
+            Show unread
+          </button>
+          <button type="button" className="surprise" onClick={surprise}>
+            Surprise me
+          </button>
+        </div>
+        {surpriseMessage ? (
+          <p className="hint" role="status">
+            {surpriseMessage}
+          </p>
+        ) : null}
+
+        <p className="label" id="shelf-filter-label">
+          Shelves
         </p>
-      </div>
+        <div className="tabs" role="group" aria-labelledby="shelf-filter-label">
+          <button
+            type="button"
+            className={filters.shelf === "all" ? "tab on" : "tab"}
+            aria-pressed={filters.shelf === "all"}
+            onClick={() => replaceQuery({ shelf: null })}
+          >
+            All <b>{readings.length}</b>
+          </button>
+          {SHELVES.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className={filters.shelf === item.id ? "tab on" : "tab"}
+              aria-pressed={filters.shelf === item.id}
+              style={{ ["--shelf" as string]: item.color }}
+              onClick={() => replaceQuery({ shelf: filters.shelf === item.id ? null : item.id })}
+            >
+              <i />
+              {item.label} <b>{shelfCounts.get(item.id) ?? 0}</b>
+            </button>
+          ))}
+        </div>
+
+        <p className="label" id="author-filter-label">
+          Authors
+        </p>
+        <div className="achips" role="group" aria-labelledby="author-filter-label">
+          <button
+            type="button"
+            className={filters.author === null ? "achip on" : "achip"}
+            aria-pressed={filters.author === null}
+            onClick={() => replaceQuery({ author: null })}
+          >
+            All
+          </button>
+          {authorChips.map((author) => {
+            const pressed = filters.author?.toLowerCase() === author.name.toLowerCase();
+            return (
+              <button
+                key={author.name}
+                type="button"
+                className={pressed ? "achip on" : "achip"}
+                aria-pressed={pressed}
+                onClick={() => replaceQuery({ author: pressed ? null : author.name })}
+              >
+                {author.name}
+              </button>
+            );
+          })}
+          {hiddenAuthors > 0 ? (
+            <button type="button" className="achip" onClick={() => setAuthorsOpen((open) => !open)}>
+              {authorsOpen ? "Fewer authors" : `+ ${hiddenAuthors} more`}
+            </button>
+          ) : null}
+        </div>
+      </section>
 
       {shelf.error ? (
-        <p className="mt-6 rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm" role="alert">
+        <p className="room-alert" role="alert">
           {shelf.error}
         </p>
       ) : null}
 
-      <div className="mt-8 space-y-4">
+      <div className="body">
         <div>
-          <label htmlFor="shelf-search" className="text-sm font-medium">
-            Search
-          </label>
-          <Input
-            id="shelf-search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Title, author, source, or tag"
-            className="mt-2 h-11 md:text-base"
-          />
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium" id="status-filter-label">
-            Status
+          <p className="live" aria-live="polite">
+            {visible.length} {visible.length === 1 ? "piece" : "pieces"}
+            {filtering ? " match" : ""}
           </p>
-          <div className="flex flex-wrap gap-2" role="group" aria-labelledby="status-filter-label">
-            {statuses.map((item) => (
-              <Chip key={item} pressed={status === item} onClick={() => setStatus(item)}>
-                {item === "all" ? "All" : STATUS_LABEL[item]}
-              </Chip>
-            ))}
-          </div>
+          {visible.length === 0 ? (
+            <div className="empty">
+              <p>Nothing matches.</p>
+              <button type="button" className="more" onClick={() => router.replace(pathname, { scroll: false })}>
+                Clear filters
+              </button>
+            </div>
+          ) : (
+            arranged.sections.map((section, index) => {
+              const meta = SHELVES.find((item) => section.id === `shelf-${item.id}`);
+              const open = sectionOpen(section.id, index);
+              const readHere = section.readings.filter(
+                (reading) => entryFor(reading, shelf.state).status === "done",
+              ).length;
+              const authors = [...new Set(section.readings.map((reading) => reading.author))].slice(0, 3);
+              const showAll = filtering || expanded[section.id];
+              const shown = showAll ? section.readings : section.readings.slice(0, PREVIEW_COUNT);
+              const hidden = section.readings.length - shown.length;
+              return (
+                <section key={section.id} id={section.id} style={{ ["--shelf" as string]: meta?.color }}>
+                  <button
+                    type="button"
+                    className={open ? "sect" : "sect closed"}
+                    aria-expanded={open}
+                    onClick={() => setClosed((current) => ({ ...current, [section.id]: open }))}
+                  >
+                    <span className="roman">{meta?.roman}</span>
+                    <span className="stitle">
+                      <h2>{section.label}</h2>
+                      <span className="sx">{authors.join(", ")}</span>
+                    </span>
+                    <span className="scount">
+                      {section.readings.length} {section.readings.length === 1 ? "piece" : "pieces"} · {readHere}{" "}
+                      read
+                    </span>
+                    <span className="chev" aria-hidden="true">
+                      {open ? "–" : "+"}
+                    </span>
+                  </button>
+                  {open ? (
+                    <>
+                      <div className="grid">
+                        {shown.map((reading) => {
+                          const entry = entryFor(reading, shelf.state);
+                          const partners = (reading.pairsWith ?? [])
+                            .map((slug) => bySlug.get(slug))
+                            .filter((partner): partner is Reading => Boolean(partner));
+                          const note = noteText(reading, entry.notes);
+                          const paywalled = isPaywalled(reading.source);
+                          const color = shelfMeta(reading.shelf)?.color;
+                          const read = entry.status === "done";
+                          return (
+                            <article
+                              key={reading.id}
+                              id={reading.slug}
+                              className="card"
+                              style={{ ["--shelf" as string]: color }}
+                            >
+                              <span className="spine" />
+                              <div className="cardtop">
+                                <p className="shelf">
+                                  <i />
+                                  {kindLabel(reading)}
+                                </p>
+                                {reading.collection === "five-for-kyle" ? (
+                                  <span className="startmark">★ Start here</span>
+                                ) : null}
+                                <span className="spacer" />
+                                <span className={paywalled ? "badge pay" : "badge free"}>
+                                  {paywalled ? "Paywall" : "Free to read"}
+                                </span>
+                              </div>
+                              <h3>
+                                <Link href={`/reading/${reading.slug}`}>{reading.title}</Link>
+                              </h3>
+                              <div className="byline">
+                                <button
+                                  type="button"
+                                  className="author"
+                                  aria-pressed={filters.author?.toLowerCase() === reading.author.toLowerCase()}
+                                  onClick={() =>
+                                    replaceQuery({
+                                      author:
+                                        filters.author?.toLowerCase() === reading.author.toLowerCase()
+                                          ? null
+                                          : reading.author,
+                                    })
+                                  }
+                                >
+                                  <span className="dot" />
+                                  {reading.author}
+                                </button>
+                                <p className="meta">
+                                  {reading.published}
+                                  {reading.source ? <em> · {reading.source}</em> : null}
+                                </p>
+                              </div>
+                              <p className="sum">{reading.summary ?? reading.blurb}</p>
+                              <p className={note ? "note filled" : "note"}>
+                                <span className="notelabel">Marginal note</span>
+                                {note ? <span>{note}</span> : <span className="ph">Add a marginal note…</span>}
+                              </p>
+                              {partners.length > 0 ? (
+                                <p className="pair">
+                                  <span>Pairs well with </span>
+                                  {partners.map((partner, partnerIndex) => (
+                                    <span key={partner.slug}>
+                                      {partnerIndex > 0 ? ", " : null}
+                                      <Link href={`/reading/${partner.slug}`}>{partner.title}</Link>
+                                    </span>
+                                  ))}
+                                </p>
+                              ) : null}
+                              <div className="cardfoot">
+                                <p className="rt">{timeLabel(reading)}</p>
+                                <div className="toggle" role="group" aria-label={`Mark ${reading.title}`}>
+                                  <button
+                                    type="button"
+                                    className={read ? "" : "on"}
+                                    aria-pressed={!read}
+                                    onClick={() => mark(reading, "to-read")}
+                                  >
+                                    To read
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className={read ? "on read" : ""}
+                                    aria-pressed={read}
+                                    onClick={() => mark(reading, "done")}
+                                  >
+                                    Read
+                                  </button>
+                                </div>
+                              </div>
+                            </article>
+                          );
+                        })}
+                      </div>
+                      {hidden > 0 ? (
+                        <button
+                          type="button"
+                          className="more"
+                          onClick={() => setExpanded((current) => ({ ...current, [section.id]: true }))}
+                        >
+                          Show {hidden} more
+                        </button>
+                      ) : null}
+                    </>
+                  ) : null}
+                </section>
+              );
+            })
+          )}
         </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium" id="shelf-filter-label">
-            Shelf
+
+        <aside className="ledger" aria-label="Ledger">
+          <p className="lh">Ledger</p>
+          <p className="big">
+            {doneCount}
+            <span>/{readings.length}</span>
           </p>
-          <div
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
-            role="group"
-            aria-labelledby="shelf-filter-label"
-          >
-            <Chip pressed={shelfId === "all"} onClick={() => setShelfId("all")}>
-              All shelves
-            </Chip>
-            {SHELVES.map((shelf) => (
-              <Chip key={shelf.id} pressed={shelfId === shelf.id} onClick={() => setShelfId(shelf.id)}>
-                {shelf.label}
-              </Chip>
-            ))}
+          <p className="lsub">pieces marked read on this device</p>
+          <div className="bar" aria-hidden="true">
+            <i style={{ width: `${readShare}%` }} />
           </div>
-        </div>
-        <div className="space-y-2">
-          <p className="text-sm font-medium" id="tag-filter-label">
-            Tag
+          <p className="lrow">
+            <span>To read</span>
+            <span>{unreadCount}</span>
           </p>
-          <div
-            className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0"
-            role="group"
-            aria-labelledby="tag-filter-label"
-          >
-            <Chip pressed={tag === null} onClick={() => setTag(null)}>
-              All tags
-            </Chip>
-            {tags.map((item) => (
-              <Chip key={item} pressed={tag === item} onClick={() => setTag(item)}>
-                {item}
-              </Chip>
-            ))}
-          </div>
-        </div>
+          <p className="lrow">
+            <span>With notes</span>
+            <span>{notedCount}</span>
+          </p>
+          <p className="lrow">
+            <span>Hours left</span>
+            <span>≈{hoursLeft}</span>
+          </p>
+          <p className="lq">{ledgerQuestion}</p>
+        </aside>
       </div>
 
-      <p className="mt-8 text-sm text-muted-foreground" aria-live="polite">
-        {`${visible.length} ${visible.length === 1 ? "piece" : "pieces"}`}
-      </p>
-
-      {!shelf.ready && visible.length === 0 ? (
-        <div className="mt-4">
-          <ShelfSkeleton />
-        </div>
-      ) : visible.length === 0 ? (
-        <div className="mt-4 rounded-2xl border border-dashed border-border px-6 py-16 text-center">
-          <p className="font-display text-3xl tracking-tight">Nothing matches</p>
-          <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-muted-foreground">
-            Try another word, or clear the filters and look through the shelf again.
-          </p>
-          {filtering ? (
-            <Button
-              type="button"
-              variant="outline"
-              className="mt-5"
-              onClick={() => {
-                setQuery("");
-                setStatus("all");
-                setTag(null);
-                setShelfId("all");
-              }}
-            >
-              Clear filters
-            </Button>
-          ) : null}
-        </div>
-      ) : (
-        <div className="mt-6 grid grid-cols-1 items-start gap-4 sm:grid-cols-2">
-          {visible.map((reading) => (
-            <ReadingCard
-              key={reading.id}
-              reading={reading}
-              status={entryFor(reading, shelf.state).status}
-              onTag={setTag}
-            />
-          ))}
-        </div>
-      )}
-
-      <div className="mt-10">
+      <footer className="foot">
+        <p>Kyle&apos;s Reading Room</p>
+        <p>Notes and progress are saved on this device.</p>
+        <Link href="/add">Add a piece</Link>
+      </footer>
+      <details className="file">
+        <summary>Import or export this shelf</summary>
         <ShelfFile state={shelf.state} ready={shelf.ready} onImport={shelf.replace} />
-      </div>
+      </details>
     </div>
   );
 }
