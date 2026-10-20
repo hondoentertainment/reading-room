@@ -57,7 +57,7 @@ const PAIRS: Record<string, string[]> = {
   "what-writers-really-do-when-they-write": ["draft-no-4"],
   "the-bitter-lesson": ["the-bitter-lesson-versus-the-garbage-can"],
   "the-bitter-lesson-versus-the-garbage-can": ["the-bitter-lesson"],
-  "why-ai-isnt-going-to-make-art": ["chatgpt-is-a-blurry-jpeg-of-the-web"],
+  "why-ai-isnt-going-to-make-art": ["chatgpt-is-a-blurry-jpeg-of-the-web", "ghosts"],
   "chatgpt-is-a-blurry-jpeg-of-the-web": ["why-ai-isnt-going-to-make-art"],
   "machines-of-loving-grace": ["the-urgency-of-interpretability"],
   "the-urgency-of-interpretability": ["machines-of-loving-grace"],
@@ -83,6 +83,13 @@ const PAIRS: Record<string, string[]> = {
   "having-a-coke-with-you": ["someday-ill-love-ocean-vuong"],
   "shipping-out": ["consider-the-lobster"],
   "consider-the-lobster": ["shipping-out"],
+  "ghosts": ["why-ai-isnt-going-to-make-art"],
+  "the-weight-of-glory": ["gazing-into-the-abyss"],
+  "gazing-into-the-abyss": ["the-weight-of-glory"],
+  "on-fairy-stories": ["c-s-lewis-reviews-the-hobbit-1937"],
+  "c-s-lewis-reviews-the-hobbit-1937": ["on-fairy-stories"],
+  "the-silent-season-of-a-hero": ["hub-fans-bid-kid-adieu"],
+  "hub-fans-bid-kid-adieu": ["the-silent-season-of-a-hero"],
 };
 
 type ReadingSeed = Omit<Reading, "note"> & { note?: string };

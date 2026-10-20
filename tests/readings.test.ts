@@ -155,12 +155,12 @@ describe("seeded shelf", () => {
     assert.deepEqual(seededReadings[1]?.tags, ["essay", "lyric essay", "nature", "Doyle"]);
     const slugs = seededReadings.map((reading) => reading.slug);
     assert.equal(new Set(slugs).size, slugs.length);
-    assert.equal(seededReadings.length, 131);
+    assert.equal(seededReadings.length, 151);
     const shelved = seededReadings.filter((reading) => reading.shelf);
-    assert.equal(shelved.length, 131);
+    assert.equal(shelved.length, 151);
     assert.deepEqual(
       SHELVES.map((shelf) => shelved.filter((reading) => reading.shelf === shelf.id).length),
-      [11, 36, 9, 10, 8, 7, 6, 9, 9, 8, 18],
+      [14, 39, 10, 11, 11, 10, 6, 12, 9, 11, 18],
     );
     for (const slug of [
       "situational-awareness",
